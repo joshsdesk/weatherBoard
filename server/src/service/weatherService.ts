@@ -93,26 +93,26 @@ class WeatherService {
     let name
     if (this.cityName === `location not found`) {name = `Location not found, here's the north pole instead!`}
     else {name = response.name}
-  const dateOptions = { day: 'numeric', month: 'long', year: 'numeric' };
-  const formattedDate = (new Date()).toLocaleDateString('en-US', dateOptions);
-  return new Weather(name, formattedDate, current.weather[0].icon, current.weather[0].description, current.main.temp, current.wind.speed, current.main.humidity)
-}
-
-private parseForecast(response: any) {
-  const daysUnfiltered: any[] = response.list
-  const days: any[] = daysUnfiltered.filter((entry: any) => entry.dt_txt.includes(`12:00:00`))
-  const forecast: Weather[] = []
-  let name
-  if (this.cityName === `location not found`) {name = `Location not found`}
-  else {name = response.name}
-  const dateOptions = { day: 'numeric', month: 'long', year: 'numeric' };
-  for (const day of days) {
-    const formattedDate = (new Date(day.dt_txt)).toLocaleDateString('en-US', dateOptions);
-    const weather = new Weather(name, formattedDate, day.weather[0].icon, day.weather[0].description, day.main.temp, day.wind.speed, day.main.humidity)
-    forecast.push(weather)
+    const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+    const formattedDate = (new Date()).toLocaleDateString('en-US', dateOptions);
+    return new Weather(name, formattedDate, current.weather[0].icon, current.weather[0].description, current.main.temp, current.wind.speed, current.main.humidity)
   }
-  return forecast
-}
+  
+  private parseForecast(response: any) {
+    const daysUnfiltered: any[] = response.list
+    const days: any[] = daysUnfiltered.filter((entry: any) => entry.dt_txt.includes(`12:00:00`))
+    const forecast: Weather[] = []
+    let name
+    if (this.cityName === `location not found`) {name = `Location not found`}
+    else {name = response.name}
+    const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+    for (const day of days) {
+      const formattedDate = (new Date(day.dt_txt)).toLocaleDateString('en-US', dateOptions);
+      const weather = new Weather(name, formattedDate, day.weather[0].icon, day.weather[0].description, day.main.temp, day.wind.speed, day.main.humidity)
+      forecast.push(weather)
+    }
+    return forecast
+  }
 
   // TODO: Complete buildForecastArray method
   private buildForecastArray(currentWeather: Weather, weatherData: any[]) {
