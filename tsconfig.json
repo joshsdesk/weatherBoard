@@ -28,7 +28,7 @@
 
     /* File Output */
     "outDir": "./dist", /* Output directory for compiled JavaScript files */
-    "rootDir": "./src" /* The root directory of your source TypeScript files */
+    "rootDir": "./" /* The root directory of your source TypeScript files */
   },
   "include": ["src/**/*"], /* Include all files in the src directory */
   "exclude": ["node_modules", "dist", "vite.config.js"] /* Exclude node_modules, dist, and config files from compilation */
