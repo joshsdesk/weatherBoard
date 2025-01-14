@@ -95,6 +95,10 @@ class WeatherService {
 
     const currentWeather = await currentWeatherResponse.json();
     const forecast = await forecastResponse.json();
+    
+    console.log('Current Weather:', currentWeather);
+    console.log('Forecast:', forecast);
+    
     return { currentWeather, forecast };
   }
 
