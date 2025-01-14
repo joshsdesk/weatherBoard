@@ -1,4 +1,3 @@
-// weatherService.ts
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -29,6 +28,12 @@ class Weather {
         this.windSpeed = windSpeed;
         this.humidity = humidity;
     }
+}
+
+// Define the return type for the getWeatherForCity method
+interface WeatherData {
+    current: Weather | null;
+    forecast: Weather[];
 }
 
 // TODO: Complete the WeatherService class
@@ -87,44 +92,64 @@ class WeatherService {
     }
 
     // TODO: Complete getWeatherForCity method
-    async getWeatherForCity(): Promise<Weather[]> {
+    async getWeatherForCity(): Promise<WeatherData> {
         try {
             const locationData = await this.fetchLocationData();
             const coordinates = this.destructureLocationData(locationData);
             const weatherData = await this.fetchWeatherData(coordinates);
 
-            // Filter data for the next 5 unique days
-            const filteredData: { [key: string]: any } = {};
+            // Extract current weather
+            const currentWeatherData = weatherData.list[0];
+            const current = new Weather(
+                this.cityName,
+                new Date(currentWeatherData.dt_txt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                }),
+                currentWeatherData.weather[0].icon,
+                currentWeatherData.weather[0].description,
+                currentWeatherData.main.temp,
+                currentWeatherData.wind.speed,
+                currentWeatherData.main.humidity
+            );
+
+            // Extract forecast for the next 5 days (excluding today)
+            const forecastData: { [key: string]: any } = {};
             weatherData.list.forEach((item: any) => {
                 const date = new Date(item.dt_txt).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
                 });
-                if (!filteredData[date]) {
-                    filteredData[date] = item;
+                if (!forecastData[date] && new Date(item.dt_txt).getDate() !== new Date().getDate()) {
+                    forecastData[date] = item;
                 }
             });
 
-            return Object.values(filteredData).slice(0, 5).map((item: any) => {
-                const formattedDate = new Date(item.dt_txt).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
+            const forecast = Object.values(forecastData)
+                .slice(0, 5)
+                .map((item: any) => {
+                    const formattedDate = new Date(item.dt_txt).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                    });
+                    return new Weather(
+                        this.cityName,
+                        formattedDate,
+                        item.weather[0].icon,
+                        item.weather[0].description,
+                        item.main.temp,
+                        item.wind.speed,
+                        item.main.humidity
+                    );
                 });
-                return new Weather(
-                    this.cityName,
-                    formattedDate,
-                    item.weather[0].icon,
-                    item.weather[0].description,
-                    item.main.temp,
-                    item.wind.speed,
-                    item.main.humidity
-                );
-            });
+
+            return { current, forecast };
         } catch (error: unknown) {
             console.error('Error getting weather for city:', (error as Error).message);
-            return [];
+            return { current: null, forecast: [] };
         }
     }
 }
