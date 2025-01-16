@@ -20,6 +20,8 @@ If you'd like to install the repo itself to work on, download or git clone the f
 ## Usage
 Run ```npm run start:dev``` 
 
+Copy ```https://weatherboard.onrender.com``` 
+
 ## Credits
 This app was made possible through use of the apis of openweathermap.org.
 
