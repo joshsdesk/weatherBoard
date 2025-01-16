@@ -1,79 +1,79 @@
-// historyService.ts
-import { v4 as uuidv4 } from 'uuid';
-import fs from 'node:fs/promises';
-
-// TODO: Define a City class with name and id properties
 class City {
-    name: string;
-    id: string;
+  id: string;
+  name: string;
 
-    constructor(name: string) {
-        this.name = name;
-        this.id = uuidv4();
-    }
+  constructor(id: string, name: string) {
+    this.id = id;
+    this.name = name;
+  }
 }
 
-// TODO: Complete the HistoryService class
+import fs from 'fs/promises';
+import { v4 as uuidv4 } from 'uuid';
+
+const HISTORY_FILE = 'db/searchHistory.json';
+
 class HistoryService {
-    // TODO: Define a read method that reads from the searchHistory.json file
-    async read(): Promise<string> {
-        try {
-            const history = await fs.readFile('db/searchHistory.json', 'utf8');
-            return history;
-        } catch (error: unknown) {
-            if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-                console.warn('searchHistory.json not found, returning empty history.');
-                return '[]';
-            }
-            throw error;
-        }
+  private async read(): Promise<City[]> {
+    try {
+      const data = await fs.readFile(HISTORY_FILE, 'utf8');
+      return JSON.parse(data) || [];
+    } catch (err) {
+      console.error("Error reading history file:", (err as Error).message);
+      return [];
     }
+  }
 
-    // TODO: Define a write method that writes the updated cities array to the searchHistory.json file
-    async write(cities: City[]): Promise<void> {
-        try {
-            await fs.writeFile('db/searchHistory.json', JSON.stringify(cities, null, 2));
-        } catch (error: unknown) {
-            console.error('Error writing to searchHistory.json:', (error as Error).message);
-        }
+  private async write(cities: City[]): Promise<void> {
+    try {
+      await fs.writeFile(HISTORY_FILE, JSON.stringify(cities, null, 2));
+    } catch (err) {
+      console.error("Error writing to history file:", (err as Error).message);
     }
+  }
 
-    // TODO: Define a getCities method that reads the cities from the searchHistory.json file and returns them as an array of City objects
-    async getCities(): Promise<City[]> {
-        try {
-            const history = JSON.parse(await this.read());
-            return Array.isArray(history) ? history.map((city: City) => new City(city.name)) : [];
-        } catch (error: unknown) {
-            console.error('Error reading cities from history:', (error as Error).message);
-            return [];
-        }
+  async getCities(): Promise<City[]> {
+    try {
+      const cities = await this.read();
+      return cities;
+    } catch (err) {
+      console.error("Error fetching cities:", (err as Error).message);
+      throw new Error("Failed to fetch cities.");
     }
+  }
 
-    // TODO: Define an addCity method that adds a city to the searchHistory.json file
-    async addCity(cityName: string): Promise<void> {
-        try {
-            const cities = await this.getCities();
-            const cityExists = cities.some((city) => city.name.toLowerCase() === cityName.toLowerCase());
-            if (!cityExists) {
-                const newCity = new City(cityName);
-                cities.push(newCity);
-                await this.write(cities);
-            }
-        } catch (error: unknown) {
-            console.error('Error adding city to history:', (error as Error).message);
-        }
-    }
+  async addCity(cityName: string): Promise<void> {
+    try {
+      if (!cityName || typeof cityName !== 'string' || cityName.trim() === '') {
+        throw new Error("Invalid city name.");
+      }
 
-    // TODO: Define a removeCity method that removes a city from the searchHistory.json file
-    async removeCity(id: string): Promise<void> {
-        try {
-            const cities = await this.getCities();
-            const updatedCities = cities.filter((city) => city.id !== id);
-            await this.write(updatedCities);
-        } catch (error: unknown) {
-            console.error('Error removing city from history:', (error as Error).message);
-        }
+      const cities = await this.read();
+      if (!cities.some((city) => city.name.toLowerCase() === cityName.toLowerCase())) {
+        cities.push(new City(uuidv4(), cityName));
+        await this.write(cities);
+      }
+    } catch (err) {
+      console.error("Error adding city:", (err as Error).message);
+      throw new Error("Failed to add city.");
     }
+  }
+
+  async removeCity(id: string): Promise<void> {
+    try {
+      const cities = await this.read();
+      const updatedCities = cities.filter((city) => city.id !== id);
+
+      if (cities.length === updatedCities.length) {
+        throw new Error("City not found.");
+      }
+
+      await this.write(updatedCities);
+    } catch (err) {
+      console.error("Error removing city:", (err as Error).message);
+      throw new Error("Failed to remove city.");
+    }
+  }
 }
 
 export default new HistoryService();

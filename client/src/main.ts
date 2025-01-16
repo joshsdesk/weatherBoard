@@ -44,11 +44,14 @@ const fetchWeather = async (cityName: string) => {
   });
 
   const weatherData = await response.json();
-
   console.log('weatherData: ', weatherData);
 
-  renderCurrentWeather(weatherData[0]);
-  renderForecast(weatherData.slice(1));
+  if (weatherData && weatherData.forecast && weatherData.forecast.length > 0) {
+    renderCurrentWeather(weatherData.forecast[0]);
+    renderForecast(weatherData.forecast.slice(1, 6)); // Ensure we get the next 5 days
+  } else {
+    console.error('No weather data available');
+  }
 };
 
 const fetchSearchHistory = async () => {
@@ -100,6 +103,11 @@ const renderCurrentWeather = (currentWeather: any): void => {
 };
 
 const renderForecast = (forecast: any): void => {
+  if (!forecast || forecast.length === 0) {
+    console.error('Forecast data is undefined or empty');
+    return;
+  }
+
   const headingCol = document.createElement('div');
   const heading = document.createElement('h4');
 
